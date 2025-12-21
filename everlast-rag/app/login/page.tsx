@@ -1,11 +1,22 @@
 import { signIn } from "@/app/auth/actions";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/app");
+  }
+
   const sp = await searchParams;
   const error = sp.error ? decodeURIComponent(sp.error) : null;
 
@@ -13,11 +24,7 @@ export default async function LoginPage({
     <main style={{ maxWidth: 420, margin: "40px auto", padding: 16 }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>Login</h1>
 
-      {error && (
-        <p style={{ marginTop: 12, color: "crimson" }}>
-          Error: {error}
-        </p>
-      )}
+      {error && <p style={{ marginTop: 12, color: "crimson" }}>Error: {error}</p>}
 
       <form action={signIn} style={{ marginTop: 16, display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 6 }}>
