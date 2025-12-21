@@ -1,21 +1,24 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
-  --ev-ink: #0b0b0b;
-  --ev-ink-muted: #252525;
-  --ev-paper: #fffdf4;
-  --ev-paper-soft: #fffbd2;
+  --ev-bg: #050505;
+  --ev-bg-soft: #0b0b0b;
+  --ev-card: #141414;
+  --ev-card-strong: #1c1c1c;
+  --ev-ink: #f6f6f0;
+  --ev-ink-muted: #b8b8b0;
+  --ev-border: rgba(255, 255, 255, 0.08);
+  --ev-glow: rgba(250, 239, 112, 0.18);
   --ev-brand: #faef70;
-  --ev-brand-strong: #f1e443;
-  --ev-border: rgba(0, 0, 0, 0.12);
-  --ev-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  --ev-brand-strong: #f6e54a;
+  --ev-shadow: 0 40px 80px rgba(0, 0, 0, 0.55);
 }
 
 @theme inline {
-  --color-background: var(--ev-paper);
+  --color-background: var(--ev-bg);
   --color-foreground: var(--ev-ink);
   --color-brand: var(--ev-brand);
-  --color-brand-soft: var(--ev-paper-soft);
+  --color-brand-strong: var(--ev-brand-strong);
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
   --font-display: var(--font-display);
@@ -23,33 +26,34 @@
 
 @layer base {
   html {
-    color: var(--ev-ink);
-    background-color: var(--ev-paper);
+    color-scheme: dark;
+    background-color: var(--ev-bg);
   }
 
   body {
     min-height: 100%;
     font-family: var(--font-body), sans-serif;
     color: var(--ev-ink);
-    background-color: var(--ev-paper);
+    background-color: var(--ev-bg);
     background-image:
-      radial-gradient(900px 420px at 15% -10%, #fffbd2 0%, rgba(255, 251, 210, 0) 60%),
-      radial-gradient(700px 380px at 90% 0%, #faef70 0%, rgba(250, 239, 112, 0) 55%),
-      linear-gradient(180deg, #fffdf4 0%, #f7f4ea 100%),
-      linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-    background-size:
-      auto,
-      auto,
-      auto,
-      28px 28px,
-      28px 28px;
-    background-attachment: fixed;
+      radial-gradient(900px 480px at 15% -20%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 60%),
+      radial-gradient(700px 420px at 85% -10%, rgba(250, 239, 112, 0.12) 0%, rgba(250, 239, 112, 0) 58%),
+      linear-gradient(180deg, #0b0b0b 0%, #050505 45%, #000000 100%);
   }
 
   ::selection {
     background: var(--ev-brand);
-    color: #1a1a1a;
+    color: #111111;
+  }
+
+  a {
+    color: var(--ev-ink);
+    text-decoration-color: rgba(250, 239, 112, 0.35);
+  }
+
+  a:hover {
+    color: #ffffff;
+    text-decoration-color: rgba(250, 239, 112, 0.8);
   }
 
   h1,
@@ -61,6 +65,17 @@
     font-family: var(--font-display), sans-serif;
     letter-spacing: -0.02em;
     text-wrap: balance;
+    color: #ffffff;
+  }
+
+  p {
+    color: var(--ev-ink-muted);
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--ev-ink);
   }
 
   main {
@@ -97,24 +112,93 @@
 
 @layer components {
   .ev-surface {
-    @apply rounded-2xl border border-black/10 bg-white/70 shadow-[0_20px_60px_rgba(0,0,0,0.08)];
-    backdrop-filter: blur(12px);
+    border-radius: 1.25rem;
+    border: 1px solid var(--ev-border);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%),
+      var(--ev-card);
+    box-shadow: var(--ev-shadow);
+  }
+
+  .ev-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ev-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--ev-brand), rgba(250, 239, 112, 0));
   }
 
   .ev-pill {
-    @apply inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-black/70;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--ev-border);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.35rem 0.85rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ev-ink-muted);
   }
 
   .ev-link {
-    @apply text-black/80 underline decoration-transparent underline-offset-4 transition hover:text-black hover:decoration-black/50;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: underline;
+    text-decoration-color: rgba(250, 239, 112, 0.35);
+    text-underline-offset: 4px;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+
+  .ev-link:hover {
+    color: #ffffff;
+    text-decoration-color: rgba(250, 239, 112, 0.8);
   }
 
   .ev-button {
-    @apply inline-flex items-center justify-center rounded-full border border-black bg-black px-5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black/90;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: #0f0f0f;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .ev-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    background: #1a1a1a;
   }
 
   .ev-button-accent {
-    @apply inline-flex items-center justify-center rounded-full border border-black bg-[var(--ev-brand)] px-5 py-2 text-sm font-semibold text-black transition hover:-translate-y-0.5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    background: var(--ev-brand);
+    padding: 0.65rem 1.6rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111111;
+    box-shadow: 0 12px 30px rgba(250, 239, 112, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .ev-button-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(250, 239, 112, 0.28);
   }
 }
 

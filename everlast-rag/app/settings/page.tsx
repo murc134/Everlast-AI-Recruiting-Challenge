@@ -48,49 +48,52 @@ export default async function SettingsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-2xl font-semibold">Einstellungen</h1>
+    <main className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-semibold text-white">Einstellungen</h1>
 
-      <form action={save} className="mt-4 grid gap-3">
-        <label className="grid gap-1.5">
+      <form action={save} className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm text-white/80">
           <span>Vorname</span>
           <input
             name="firstname"
             defaultValue={profile?.firstname ?? ""}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300/60"
           />
         </label>
 
-        <label className="grid gap-1.5">
+        <label className="grid gap-2 text-sm text-white/80">
           <span>Nachname</span>
           <input
             name="lastname"
             defaultValue={profile?.lastname ?? ""}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300/60"
           />
         </label>
 
-        <label className="grid gap-1.5">
+        <label className="grid gap-2 text-sm text-white/80">
           <span>OpenAI API-Schluessel (nur Challenge)</span>
           <input
             name="openai_api_key"
             type="password"
             defaultValue={profile?.openai_api_key ?? ""}
             placeholder="sk-..."
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300/60"
           />
         </label>
 
         <button
           type="submit"
-          className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
+          className="ev-button-accent w-full sm:w-auto"
         >
           Speichern
         </button>
       </form>
 
-      <p className="mt-4 text-sm">
-        <a href="/app" className="text-blue-600 underline underline-offset-2">
+      <p className="mt-5 text-sm text-white/70">
+        <a
+          href="/app"
+          className="text-[color:var(--ev-brand)] underline underline-offset-4"
+        >
           Zurueck
         </a>
       </p>

@@ -46,38 +46,36 @@ export default async function AppHome() {
   const greeting = buildGreeting(firstname, lastname);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-2xl font-semibold">App</h1>
+    <main className="mx-auto max-w-4xl px-4 py-12">
+      <h1 className="text-3xl font-semibold">App</h1>
 
-      <p className="mt-3">
+      <p className="mt-3 text-white/80">
         {greeting}, du bist angemeldet als{" "}
         <strong className="font-semibold">{user.email}</strong>.
       </p>
 
       {hasOpenAiKey ? (
-        <p className="mt-2 text-sm text-emerald-700">
-          Deine App ist konfiguriert.
-        </p>
+        <p className="mt-2 text-sm text-white/60">Deine App ist konfiguriert.</p>
       ) : (
-        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-950">
-          <p className="font-semibold">
+        <div className="mt-4 ev-card ev-surface p-5">
+          <p className="font-semibold text-white">
             Bitte hinterlege deinen OpenAI API-Schluessel in{" "}
             <Link
               href="/settings"
-              className="underline underline-offset-2"
+              className="text-[color:var(--ev-brand)] underline underline-offset-4"
             >
               Einstellungen
             </Link>
             .
           </p>
 
-          <p className="mt-2">
+          <p className="mt-2 text-white/70">
             Wenn du noch keinen API-Schluessel hast, gehe auf{" "}
             <a
               href="https://openai.com/de-DE/index/openai-api/"
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-blue-600 underline underline-offset-2"
+              className="font-medium text-[color:var(--ev-brand)] underline underline-offset-4"
             >
               https://openai.com/de-DE/index/openai-api/
             </a>{" "}

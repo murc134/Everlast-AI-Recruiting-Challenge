@@ -6,12 +6,11 @@ export default async function NavBar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const linkClassName =
-    "text-sm font-medium text-gray-700 transition hover:text-gray-900";
+  const linkClassName = "ev-link text-sm font-medium";
 
   return (
-    <header className="border-b border-gray-200">
-      <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-3">
+    <header className="border-b border-white/10 bg-black/60 backdrop-blur">
+      <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
         <div className="flex flex-wrap items-center gap-4">
           {user && (
             <Link href="/" className={linkClassName}>
@@ -27,6 +26,13 @@ export default async function NavBar() {
           >
             Ping-API
           </a>
+
+          {user && (
+  <Link href="/knowledge" className={linkClassName}>
+    Wissen
+  </Link>
+)}
+
 
           <Link href="/register" className={linkClassName}>
             Registrieren
@@ -48,7 +54,7 @@ export default async function NavBar() {
           )}
         </div>
 
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-white/50">
           {user ? `Angemeldet: ${user.email}` : "Nicht angemeldet"}
         </div>
       </nav>
