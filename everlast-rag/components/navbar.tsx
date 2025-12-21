@@ -32,6 +32,11 @@ export default async function NavBar() {
     Wissen
   </Link>
 )}
+{user && (
+  <Link href="/chat" className={linkClassName}>
+    Chat
+  </Link>
+)}
 
 
           <Link href="/register" className={linkClassName}>

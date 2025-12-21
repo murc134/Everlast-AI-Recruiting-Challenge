@@ -1,0 +1,278 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { embedTexts } from "@/lib/openai";
+
+type ProfileRow = { openai_api_key: string | null };
+
+type ChatBody = {
+  chat_id?: number;
+  message?: string;
+  model?: string;
+  top_k?: number;
+};
+
+type MatchChunkRow = {
+  chunk_id: number;
+  document_id: number;
+  chunk_index: number;
+  content: string;
+  similarity: number;
+};
+
+type DocumentRow = {
+  id: number;
+  document_name: string;
+};
+
+const ALLOWED_MODELS = [
+  "gpt-4.1-nano",
+  "gpt-4o-mini",
+  "gpt-4.1-mini",
+  "gpt-4o",
+] as const;
+
+function pickModel(input: string | undefined) {
+  const m = String(input || "").trim();
+  if (!m) return "gpt-4.1-nano";
+  if ((ALLOWED_MODELS as readonly string[]).includes(m)) return m;
+  return "gpt-4.1-nano";
+}
+
+async function callOpenAIChat(options: {
+  apiKey: string;
+  model: string;
+  system: string;
+  user: string;
+}) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${options.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: options.model,
+      messages: [
+        { role: "system", content: options.system },
+        { role: "user", content: options.user },
+      ],
+      temperature: 0.2,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`OpenAI chat failed (${res.status}): ${text}`);
+  }
+
+  const json = await res.json();
+  const content =
+    json?.choices?.[0]?.message?.content ??
+    json?.choices?.[0]?.message?.content?.[0]?.text ??
+    "";
+
+  return String(content || "").trim();
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError && userError.message !== "Auth session missing!") {
+      return NextResponse.json(
+        { ok: false, error: userError.message },
+        { status: 500 }
+      );
+    }
+    if (!user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = (await request.json().catch(() => ({}))) as ChatBody;
+    const chatId = Number(body.chat_id);
+    const message = String(body.message || "").trim();
+    const topK = Math.max(1, Math.min(10, Number(body.top_k ?? 6)));
+    const model = pickModel(body.model);
+
+    if (!Number.isFinite(chatId)) {
+      return NextResponse.json({ ok: false, error: "chat_id is required" }, { status: 400 });
+    }
+    if (!message) {
+      return NextResponse.json({ ok: false, error: "message is required" }, { status: 400 });
+    }
+
+    // Sicherheitscheck: gehört dieser Chat dem User?
+    const { data: chatRow, error: chatError } = await supabase
+      .from("chat_sessions")
+      .select("id")
+      .eq("id", chatId)
+      .eq("owner_id", user.id)
+      .maybeSingle<{ id: number }>();
+
+    if (chatError) {
+      return NextResponse.json({ ok: false, error: chatError.message }, { status: 500 });
+    }
+    if (!chatRow) {
+      return NextResponse.json({ ok: false, error: "Chat not found" }, { status: 404 });
+    }
+
+    // OpenAI Key
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("openai_api_key")
+      .eq("id", user.id)
+      .maybeSingle<ProfileRow>();
+
+    if (profileError) {
+      return NextResponse.json({ ok: false, error: profileError.message }, { status: 500 });
+    }
+
+    const apiKey = (profile?.openai_api_key ?? "").trim();
+    if (!apiKey) {
+      return NextResponse.json(
+        { ok: false, error: "Missing OpenAI API key. Set it in /settings." },
+        { status: 400 }
+      );
+    }
+
+    // 1) Persist user message
+    const { error: msgInsertError } = await supabase.from("messages").insert({
+      chat_id: chatId,
+      owner_id: user.id,
+      role: "user",
+      content: message,
+      metadata: { model_requested: model },
+    });
+
+    if (msgInsertError) {
+      return NextResponse.json({ ok: false, error: msgInsertError.message }, { status: 500 });
+    }
+
+    // 2) Embed query
+    const [queryEmbedding] = await embedTexts({
+      apiKey,
+      model: "text-embedding-3-small",
+      input: [message],
+    });
+
+    // 3) Retrieve via RPC match_chunks
+    const { data: chunks, error: rpcError } = await supabase
+      .rpc("match_chunks", { query_embedding: queryEmbedding, match_count: topK })
+      .returns<MatchChunkRow[]>();
+
+    if (rpcError) {
+      return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
+    }
+
+    const safeChunks = (chunks ?? []).filter(Boolean);
+
+    // 4) Map document names for citations
+    const docIds = Array.from(new Set(safeChunks.map((c) => c.document_id)));
+    const { data: docs, error: docsError } = await supabase
+      .from("documents")
+      .select("id, document_name")
+      .in("id", docIds)
+      .returns<DocumentRow[]>();
+
+    if (docsError) {
+      return NextResponse.json({ ok: false, error: docsError.message }, { status: 500 });
+    }
+
+    const docNameById = new Map<number, string>();
+    (docs ?? []).forEach((d) => docNameById.set(d.id, d.document_name));
+
+    // 5) Prompt bauen
+    const sources = safeChunks.map((c, idx) => {
+      const n = idx + 1;
+      const docName = docNameById.get(c.document_id) ?? `Dokument ${c.document_id}`;
+      return {
+        n,
+        chunk_id: c.chunk_id,
+        document_id: c.document_id,
+        document_name: docName,
+        chunk_index: c.chunk_index,
+        similarity: c.similarity,
+        snippet: c.content.slice(0, 400),
+        content: c.content,
+      };
+    });
+
+    const contextBlock =
+      sources.length === 0
+        ? "KEIN KONTEXT VORHANDEN."
+        : sources
+            .map(
+              (s) =>
+                `[${s.n}] ${s.document_name} (doc:${s.document_id}, chunk:${s.chunk_index}, sim:${s.similarity.toFixed(
+                  3
+                )})\n${s.content}`
+            )
+            .join("\n\n---\n\n");
+
+    const system = [
+      "Du bist ein RAG-Assistent.",
+      "Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.",
+      "Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.",
+      "Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
+      "",
+      "KONTEXT:",
+      contextBlock,
+    ].join("\n");
+
+    const answer = await callOpenAIChat({
+      apiKey,
+      model,
+      system,
+      user: message,
+    });
+
+    // 6) Persist assistant message inkl Quellen-Metadata
+    const assistantMetadata = {
+      model_used: model,
+      top_k: topK,
+      sources: sources.map((s) => ({
+        n: s.n,
+        document_id: s.document_id,
+        document_name: s.document_name,
+        chunk_id: s.chunk_id,
+        chunk_index: s.chunk_index,
+        similarity: s.similarity,
+        snippet: s.snippet,
+      })),
+    };
+
+    const { error: assistantInsertError } = await supabase.from("messages").insert({
+      chat_id: chatId,
+      owner_id: user.id,
+      role: "assistant",
+      content: answer || "Nicht in der Wissensbasis.",
+      metadata: assistantMetadata,
+    });
+
+    if (assistantInsertError) {
+      return NextResponse.json(
+        { ok: false, error: assistantInsertError.message },
+        { status: 500 }
+      );
+    }
+
+    // update chat updated_at (optional, aber nice)
+    await supabase.from("chat_sessions").update({}).eq("id", chatId);
+
+    return NextResponse.json({
+      ok: true,
+      chat_id: chatId,
+      model: model,
+      answer: answer || "Nicht in der Wissensbasis.",
+      sources: assistantMetadata.sources,
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
