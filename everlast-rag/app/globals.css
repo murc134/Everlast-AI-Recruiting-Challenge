@@ -200,6 +200,49 @@
     transform: translateY(-2px);
     box-shadow: 0 16px 34px rgba(250, 239, 112, 0.28);
   }
+
+  .Warnung,
+  .Success,
+  .Info,
+  .Error {
+    border-radius: 0.5rem;
+    border: 1px solid;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .Warnung {
+    background: #fff6cf;
+    border-color: #f0d58a;
+    color: #6b4a00;
+  }
+
+  .Success {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+  }
+
+  .Info {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e3a8a;
+  }
+
+  .Error {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #7f1d1d;
+  }
+
+  .Warnung a,
+  .Success a,
+  .Info a,
+  .Error a {
+    color: inherit;
+    text-decoration-color: currentColor;
+  }
 }
 
 @keyframes page-enter {

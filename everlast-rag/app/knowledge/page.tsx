@@ -24,6 +24,8 @@ export default async function KnowledgePage({
   const sp = await searchParams;
   const error = typeof sp.error === "string" ? sp.error : null;
   const ok = typeof sp.ok === "string" ? sp.ok : null;
+  const tab = typeof sp.tab === "string" ? sp.tab : "text";
+  const isFile = tab === "file";
 
   const { data: docs, error: docsError } = await supabase
     .from("documents")
@@ -39,7 +41,7 @@ export default async function KnowledgePage({
       <h1 className="text-2xl font-semibold">Wissen</h1>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm">
+        <div className="Error mt-4">
           <div className="font-semibold">Fehler</div>
           <div className="mt-1 break-words">
             {decodeURIComponent(error)}
@@ -53,7 +55,7 @@ export default async function KnowledgePage({
       )}
 
       {ok && (
-        <div className="mt-4 rounded-lg border border-green-300 bg-green-50 p-3 text-sm">
+        <div className="Success mt-4">
           OK - Dokument indexiert.
         </div>
       )}
