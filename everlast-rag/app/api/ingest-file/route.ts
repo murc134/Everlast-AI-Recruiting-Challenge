@@ -2,6 +2,20 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { chunkText } from "@/lib/chunking";
 import { embedTexts } from "@/lib/openai";
+import pdfParse from "pdf-parse";
+
+const supportedMimeTypes: Record<string, "text" | "pdf"> = {
+  "text/plain": "text",
+  "text/markdown": "text",
+  "text/x-markdown": "text",
+  "application/pdf": "pdf",
+};
+
+async function extractPdfText(file: File) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfData = await pdfParse(Buffer.from(arrayBuffer));
+  return pdfData.text.trim();
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -25,15 +39,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "No file uploaded" }, { status: 400 });
   }
 
-  if (file.type !== "text/plain") {
-    return NextResponse.json({ ok: false, error: "Only .txt files allowed" }, { status: 400 });
+  const fileKind = supportedMimeTypes[file.type];
+  if (!fileKind) {
+    return NextResponse.json(
+      { ok: false, error: "Dateiformat nicht unterstuetzt. Nur .txt, .md, .pdf." },
+      { status: 400 }
+    );
   }
 
   if (file.size > 1024 * 1024) {
     return NextResponse.json({ ok: false, error: "File too large (max 1MB)" }, { status: 400 });
   }
 
-  const raw_text = (await file.text()).trim();
+  let raw_text = "";
+  try {
+    raw_text =
+      fileKind === "pdf" ? await extractPdfText(file) : (await file.text()).trim();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Datei konnte nicht gelesen werden.";
+    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+  }
   if (!raw_text) {
     return NextResponse.json({ ok: false, error: "File is empty" }, { status: 400 });
   }

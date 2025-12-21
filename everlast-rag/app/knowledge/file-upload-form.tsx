@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
+import LoadingBar from "@/components/loading-bar";
 
 type UploadState =
   | { status: "idle" }
@@ -65,20 +66,22 @@ export default function FileUploadForm() {
       className="grid gap-3"
     >
       <label className="grid gap-1.5">
-        <span>.txt Datei hochladen</span>
+        <span>Datei hochladen (.txt, .md, .pdf)</span>
         <input
           type="file"
           name="file"
-          accept=".txt"
+          accept=".txt,.md,.pdf"
           className="rounded-lg border border-gray-300 px-3 py-2"
           required
           disabled={isBusy}
         />
-        <p className="text-sm text-gray-600">Nur .txt Dateien werden unterstuetzt.</p>
+        <p className="text-sm text-gray-600">
+          Unterstuetzt: .txt, .md, .pdf.
+        </p>
       </label>
 
       {state.status === "uploading" && (
-        <div className="text-sm text-gray-600">Upload laeuft...</div>
+        <LoadingBar />
       )}
       {state.status === "error" && (
         <div className="Error">
