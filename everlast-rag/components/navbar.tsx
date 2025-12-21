@@ -6,41 +6,50 @@ export default async function NavBar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const linkClassName =
+    "text-sm font-medium text-gray-700 transition hover:text-gray-900";
 
   return (
-    <header style={{ borderBottom: "1px solid #e5e7eb" }}>
-      <nav
-        style={{
-          maxWidth: 1024,
-          margin: "0 auto",
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {user && <Link href="/">Home</Link>}
+    <header className="border-b border-gray-200">
+      <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-4">
+          {user && (
+            <Link href="/" className={linkClassName}>
+              Start
+            </Link>
+          )}
 
-          <a href="/api/ping" target="_blank" rel="noreferrer">
-            Ping API
+          <a
+            href="/api/ping"
+            target="_blank"
+            rel="noreferrer"
+            className={linkClassName}
+          >
+            Ping-API
           </a>
 
-          <Link href="/register">Register</Link>
+          <Link href="/register" className={linkClassName}>
+            Registrieren
+          </Link>
 
           {user ? (
             <>
-              <Link href="/settings">Settings</Link>
-              <a href="/logout">Logout</a>
+              <Link href="/settings" className={linkClassName}>
+                Einstellungen
+              </Link>
+              <a href="/logout" className={linkClassName}>
+                Abmelden
+              </a>
             </>
           ) : (
-            <Link href="/login">Login</Link>
+            <Link href="/login" className={linkClassName}>
+              Anmelden
+            </Link>
           )}
         </div>
 
-        <div style={{ fontSize: 12, opacity: 0.7 }}>
-          {user ? `Signed in: ${user.email}` : "Not signed in"}
+        <div className="text-xs text-gray-500">
+          {user ? `Angemeldet: ${user.email}` : "Nicht angemeldet"}
         </div>
       </nav>
     </header>

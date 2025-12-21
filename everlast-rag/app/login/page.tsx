@@ -21,49 +21,47 @@ export default async function LoginPage({
   const error = sp.error ? decodeURIComponent(sp.error) : null;
 
   return (
-    <main style={{ maxWidth: 420, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Login</h1>
+    <main className="mx-auto max-w-md px-4 py-10">
+      <h1 className="text-2xl font-semibold">Anmelden</h1>
 
-      {error && <p style={{ marginTop: 12, color: "crimson" }}>Error: {error}</p>}
+      {error && <p className="mt-3 text-sm text-red-600">Fehler: {error}</p>}
 
-      <form action={signIn} style={{ marginTop: 16, display: "grid", gap: 12 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Email</span>
+      <form action={signIn} className="mt-4 grid gap-3">
+        <label className="grid gap-1.5">
+          <span>E-Mail</span>
           <input
             name="email"
             type="email"
             required
             autoComplete="email"
-            style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Password</span>
+        <label className="grid gap-1.5">
+          <span>Passwort</span>
           <input
             name="password"
             type="password"
             required
             autoComplete="current-password"
-            style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           />
         </label>
 
         <button
           type="submit"
-          style={{
-            padding: 10,
-            borderRadius: 8,
-            border: "1px solid #111",
-            fontWeight: 600,
-          }}
+          className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
         >
-          Login
+          Anmelden
         </button>
       </form>
 
-      <p style={{ marginTop: 16 }}>
-        No account yet? <Link href="/register">Register</Link>
+      <p className="mt-4 text-sm">
+        Noch kein Konto?{" "}
+        <Link href="/register" className="text-blue-600 underline underline-offset-2">
+          Registrieren
+        </Link>
       </p>
     </main>
   );

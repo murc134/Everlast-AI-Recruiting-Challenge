@@ -15,7 +15,7 @@ function buildGreeting(firstname: string | null, lastname: string | null) {
   if (fn && ln) return `Hallo ${fn} ${ln}`;
   if (fn && !ln) return `Hallo ${fn}`;
   if (!fn && ln) return `Hallo ${ln}`;
-  return "Hallo User";
+  return "Hallo";
 }
 
 export default async function AppHome() {
@@ -46,49 +46,45 @@ export default async function AppHome() {
   const greeting = buildGreeting(firstname, lastname);
 
   return (
-    <main style={{ maxWidth: 720, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>App</h1>
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <h1 className="text-2xl font-semibold">App</h1>
 
-      <p style={{ marginTop: 12 }}>
-        {greeting}, du bist eingeloggt als <b>{user.email}</b>.
+      <p className="mt-3">
+        {greeting}, du bist angemeldet als{" "}
+        <strong className="font-semibold">{user.email}</strong>.
       </p>
 
       {hasOpenAiKey ? (
-  <p style={{ marginTop: 8 }}>Deine App ist konfiguriert.</p>
-) : (
-  <div
-    style={{
-      marginTop: 12,
-      padding: 12,
-      border: "1px solid #f59e0b",
-      borderRadius: 8,
-      background: "#110000",
-    }}
-  >
-    <p style={{ fontWeight: 600 }}>
-      Bitte hinterlege deinen OpenAI API Key in{" "}
-      <Link href="/settings">Settings</Link>.
-    </p>
+        <p className="mt-2 text-sm text-emerald-700">
+          Deine App ist konfiguriert.
+        </p>
+      ) : (
+        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-950">
+          <p className="font-semibold">
+            Bitte hinterlege deinen OpenAI API-Schluessel in{" "}
+            <Link
+              href="/settings"
+              className="underline underline-offset-2"
+            >
+              Einstellungen
+            </Link>
+            .
+          </p>
 
-    <p style={{ marginTop: 8 }}>
-      Wenn du noch keinen API Key besitzt, gehe auf{" "}
-      <a
-        href="https://openai.com/de-DE/index/openai-api/"
-        target="_blank"
-        rel="noreferrer"
-        style={{
-          color: "#2563eb",
-          textDecoration: "underline",
-          fontWeight: 500,
-        }}
-      >
-        https://openai.com/de-DE/index/openai-api/
-      </a>{" "}
-      und kauf dir einen.
-    </p>
-  </div>
-)}
-
+          <p className="mt-2">
+            Wenn du noch keinen API-Schluessel hast, gehe auf{" "}
+            <a
+              href="https://openai.com/de-DE/index/openai-api/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-blue-600 underline underline-offset-2"
+            >
+              https://openai.com/de-DE/index/openai-api/
+            </a>{" "}
+            und besorge dir einen.
+          </p>
+        </div>
+      )}
     </main>
   );
 }

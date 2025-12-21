@@ -48,54 +48,51 @@ export default async function SettingsPage() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>Settings</h1>
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <h1 className="text-2xl font-semibold">Einstellungen</h1>
 
-      <form action={save} style={{ marginTop: 16, display: "grid", gap: 12 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>First name</span>
+      <form action={save} className="mt-4 grid gap-3">
+        <label className="grid gap-1.5">
+          <span>Vorname</span>
           <input
             name="firstname"
             defaultValue={profile?.firstname ?? ""}
-            style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Last name</span>
+        <label className="grid gap-1.5">
+          <span>Nachname</span>
           <input
             name="lastname"
             defaultValue={profile?.lastname ?? ""}
-            style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           />
         </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>OpenAI API key (Challenge only)</span>
+        <label className="grid gap-1.5">
+          <span>OpenAI API-Schluessel (nur Challenge)</span>
           <input
             name="openai_api_key"
             type="password"
             defaultValue={profile?.openai_api_key ?? ""}
             placeholder="sk-..."
-            style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           />
         </label>
 
         <button
           type="submit"
-          style={{
-            padding: 10,
-            borderRadius: 8,
-            border: "1px solid #111",
-            fontWeight: 600,
-          }}
+          className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
         >
-          Save
+          Speichern
         </button>
       </form>
 
-      <p style={{ marginTop: 16 }}>
-        <a href="/app">Back</a>
+      <p className="mt-4 text-sm">
+        <a href="/app" className="text-blue-600 underline underline-offset-2">
+          Zurueck
+        </a>
       </p>
     </main>
   );

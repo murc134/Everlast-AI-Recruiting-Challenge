@@ -72,4 +72,4 @@ SUPABASE_SERVICE_ROLE_KEY => unter dem Reiter "API Keys" "Legacy anon, service_r
 
 #Notizen
 
-TODO: Tailwind ernsthaft nutzen und damit globale styles generieren
+TODO: 
