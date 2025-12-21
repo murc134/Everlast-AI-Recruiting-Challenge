@@ -1,2 +1,27 @@
-# Everlast-AI-Recruiting-Challenge
-Ziel ist die Entwicklung eines kleinen End-to-End-RAG-Features. Ein Next.js-Frontend ermöglicht Fragen an eine eigene Wissensbasis. Backend und API laufen ebenfalls mit Next.js, Persistenz über Supabase (Postgres + Vektoren). Antworten basieren auf Retrieval und LLM. README mit Architektur, Setup und Design-Entscheidungen.
+# Recruiting Challenge – RAG mit Next.js & Supabase
+
+## Ziel
+Entwickle ein kleines End-to-End-Feature auf Basis eines Retrieval-Augmented-Generation-Systems (RAG).  
+Das System soll auf einer eigenen Wissensbasis (z. B. Docs, FAQs, Produktdaten) Fragen beantworten können und über ein einfaches Frontend interaktiv nutzbar sein.
+
+## Stack (vorgegeben, minimal)
+- **Backend / API:** Next.js (Route Handler / API Routes)
+- **Persistenz:** Supabase (Postgres + Vector Store / pgvector o. ä.)
+- **Frontend:** Next.js (React)
+- **Weitere Libraries/Services:** erlaubt, solange Next.js und Supabase die Basis bilden
+
+## Leitplanken (minimal)
+- **End-to-End Interface:** Einfaches UI (Webseite), über das ein User eine Frage stellen und eine Antwort sehen kann
+- **RAG-Idee:** Antworten basieren auf einer frei wählbaren Wissensbasis (z. B. Dokumente, FAQ, Produktinfos). Umsetzung von Embeddings, Retrieval und LLM ist frei
+- **Persistenz:** Speicherung der Daten in Supabase (z. B. Dokumente, Chunks, Embeddings oder sinnvoll für dein Design)
+- **README:** Kurzbeschreibung des Problems, grobe Architektur, Setup-/Run-Anleitung sowie Stichpunkte zu Design-Entscheidungen
+- **Optional:** Trennung mehrerer „Workspaces“ oder „Mandanten“ im Datenmodell (nice to have)
+
+## Zeitrahmen
+Geplanter Zeitaufwand: ca. 2–4 Stunden.  
+Fokus auf einem nachvollziehbaren Lösungsansatz, nicht auf Vollständigkeit oder Perfektion.
+
+## Abgabe
+- Repo-Link (z. B. GitHub/GitLab) oder ZIP
+- README (siehe oben)
+- Optional: Link zu einem Deployment (z. B. Vercel + Supabase-Projekt)
