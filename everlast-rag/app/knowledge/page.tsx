@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ingestKnowledge, deleteDocument } from "./actions";
+import FileUploadForm from "./file-upload-form";
 
 type DocRow = {
   id: number;
@@ -60,33 +61,62 @@ export default async function KnowledgePage({
         </div>
       )}
 
-      <form action={ingestKnowledge} className="mt-6 grid gap-3">
-        <label className="grid gap-1.5">
-          <span>Titel</span>
-          <input
-            name="document_name"
-            placeholder="z.B. Produkt FAQ"
-            className="rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+      <div className="mt-6 grid gap-4">
+        <div className="flex gap-2">
+          <a
+            href="/knowledge?tab=text"
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+              !isFile
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-300 text-gray-900 hover:border-gray-900"
+            }`}
+          >
+            Text
+          </a>
+          <a
+            href="/knowledge?tab=file"
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+              isFile
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-300 text-gray-900 hover:border-gray-900"
+            }`}
+          >
+            Datei
+          </a>
+        </div>
 
-        <label className="grid gap-1.5">
-          <span>Text</span>
-          <textarea
-            name="raw_text"
-            rows={10}
-            placeholder="Hier Text einfügen..."
-            className="rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </label>
+        {isFile ? (
+          <FileUploadForm />
+        ) : (
+          <form action={ingestKnowledge} className="grid gap-3">
+            <label className="grid gap-1.5">
+              <span>Titel</span>
+              <input
+                name="document_name"
+                placeholder="z.B. Produkt FAQ"
+                className="rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
 
-        <button
-          type="submit"
-          className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
-        >
-          Speichern und indexieren
-        </button>
-      </form>
+            <label className="grid gap-1.5">
+              <span>Text</span>
+              <textarea
+                name="raw_text"
+                rows={10}
+                placeholder="Hier Text einfuegen..."
+                className="rounded-lg border border-gray-300 px-3 py-2"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
+            >
+              Speichern und indexieren
+            </button>
+          </form>
+        )}
+      </div>
 
       <h2 className="mt-10 text-lg font-semibold">Dokumente</h2>
 
