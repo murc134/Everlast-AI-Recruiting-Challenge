@@ -28,6 +28,11 @@ Fokus auf einem nachvollziehbaren Lösungsansatz, nicht auf Vollständigkeit ode
 
 ##Setup
 
+###ChatGPT
+Ich nutze als LLM ChatGPT, du brauchst also, wenn du es selber aufsetzen willst deinen Open AI API Key
+Editiere die Datei .env Datei
+Setze OPENAI_API_KEY=DEIN_OPEN_AI_API_KEY
+
 ###Windows
 
 Ich habe das ganze unter Windows ohne WSL2 implementiert und später über Vercel gehostet
@@ -48,21 +53,22 @@ Python 3.9.13
 ####Project anlegen
 
 Project Name: Everlast AI Recruiting Challenge 
-Database password: Everlast_ist_mein_neuer_Arbeitgeb3r!
+Database password: YOUR_PASSWORD
 
 ####Project Settings
 
-Editiere die Datei .env . 
+Setze unter Preferences/Authentication "confirm_email" auf false. Da es sich hier um eine Demo handelt ist "Users will need to confirm their email address before signing in for the first time" überflüssig und nur lästig!
+
+Editiere die Datei .env.local 
 
 Die folgenden Werte findest du in deinem Supabase Projekt unter "Project Settings"
+
+Verwendung von anon/service_role-Schlüssel von Supabase
+Wir haben für die Challenge bewusst die alten anon/service_role-Schlüssel von Supabase verwendet, um die Einrichtung minimal zu halten und sie an die aktuellen Supabase-RAG-Beispiele anzupassen. Die Migration zu publishable/secret-Schlüsseln wäre ein einfacher nächster Schritt.´
 
 NEXT_PUBLIC_SUPABASE_URL => unter dem Reiter "Data API" deine URL (RESTful endpoint for querying and managing your database)
 NEXT_PUBLIC_SUPABASE_ANON_KEY => unter dem Reiter "API Keys" "Legacy anon, service_role API keys" wählen, dann das unter "anon public"
 SUPABASE_SERVICE_ROLE_KEY => unter dem Reiter "API Keys" "Legacy anon, service_role API keys" wählen, dann das unter "service_role secret"
-
-Verwendung von anon/service_role-Schlüssel von Supabase
-Wir haben für die Challenge bewusst die alten anon/service_role-Schlüssel von Supabase verwendet, um die Einrichtung minimal zu halten und sie an die aktuellen Supabase-RAG-Beispiele anzupassen. Die Migration zu publishable/secret-Schlüsseln wäre ein einfacher nächster Schritt.
-
 
 #Notizen
 

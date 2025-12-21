@@ -406,22 +406,33 @@ comment on function public.match_chunks(vector, int) is
 -- Der Trigger läuft bei jedem Insert in auth.users, unabhängig vom Auth-Flow (Email/Password, OAuth, Magic Link).
 -- Die Funktion läuft mit den Rechten des Erstellers (security definer), nicht des aufrufenden Users, was nötig ist, um RLS zu umgehen und in profiles schreiben zu dürfen.
 
- create or replace function public.handle_new_user()
- returns trigger
- language plpgsql
- security definer 
- as $$
- begin
-   insert into public.profiles (id) values (new.id)
-   on conflict (id) do nothing;
-   return new;
- end;
- $$;
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id)
+  values (new.id)
+  on conflict (id) do nothing;
 
- drop trigger if exists on_auth_user_created on auth.users;
- create trigger on_auth_user_created
- after insert on auth.users
- for each row execute function public.handle_new_user();
+  return new;
+end;
+$$;
+
+-- WICHTIG: Ausführungsrechte hart runterdrehen
+revoke all on function public.handle_new_user() from public;
+revoke all on function public.handle_new_user() from anon;
+revoke all on function public.handle_new_user() from authenticated;
+
+-- Nur die Auth-Admin-Rolle darf ausführen
+grant execute on function public.handle_new_user() to supabase_auth_admin;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
 
 
 -- ============================================================
