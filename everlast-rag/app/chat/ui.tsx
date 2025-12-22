@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import chatModels from "@/lib/chat-models.json";
 
 type Source = {
@@ -87,17 +91,143 @@ const MODEL_OPTIONS = MODEL_LIST.map((model) => ({
   )} in / ${RATE_FORMATTER.format(model.pricing.output_per_1m)} out per 1M)`,
 }));
 
+const MARKDOWN_COMPONENTS: Components = {
+  h1: ({ children, node: _node, ...props }) => (
+    <h1 className="mb-2 mt-4 text-xl font-semibold text-white" {...props}>
+      {children}
+    </h1>
+  ),
+  h2: ({ children, node: _node, ...props }) => (
+    <h2 className="mb-2 mt-4 text-lg font-semibold text-white" {...props}>
+      {children}
+    </h2>
+  ),
+  h3: ({ children, node: _node, ...props }) => (
+    <h3 className="mb-2 mt-4 text-base font-semibold text-white" {...props}>
+      {children}
+    </h3>
+  ),
+  p: ({ children, node: _node, ...props }) => (
+    <p className="mb-3 text-white/90 last:mb-0" {...props}>
+      {children}
+    </p>
+  ),
+  a: ({ children, href, node: _node, ...props }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="ev-link break-words"
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+  ul: ({ children, node: _node, ...props }) => (
+    <ul className="mb-3 list-disc space-y-1 pl-5 text-white/90" {...props}>
+      {children}
+    </ul>
+  ),
+  ol: ({ children, node: _node, ...props }) => (
+    <ol className="mb-3 list-decimal space-y-1 pl-5 text-white/90" {...props}>
+      {children}
+    </ol>
+  ),
+  li: ({ children, node: _node, ...props }) => (
+    <li className="text-white/90" {...props}>
+      {children}
+    </li>
+  ),
+  blockquote: ({ children, node: _node, ...props }) => (
+    <blockquote
+      className="mb-3 border-l-2 border-white/20 pl-3 text-white/80"
+      {...props}
+    >
+      {children}
+    </blockquote>
+  ),
+  hr: ({ node: _node, ...props }) => <hr className="my-3 border-white/10" {...props} />,
+  pre: ({ children, node: _node, ...props }) => (
+    <pre
+      className="mb-3 overflow-x-auto rounded-xl bg-black/60 p-3 text-white/90"
+      {...props}
+    >
+      {children}
+    </pre>
+  ),
+  code: ({ inline, className, children, node: _node, ...props }) => {
+    if (inline) {
+      return (
+        <code
+          className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[0.85em] text-white/90"
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    }
+
+    const blockClassName = className
+      ? `font-mono text-xs text-white/90 ${className}`
+      : "font-mono text-xs text-white/90";
+    return (
+      <code className={blockClassName} {...props}>
+        {children}
+      </code>
+    );
+  },
+  table: ({ children, node: _node, ...props }) => (
+    <div className="mb-3 overflow-x-auto">
+      <table className="w-full border-collapse text-sm" {...props}>
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children, node: _node, ...props }) => (
+    <thead className="bg-white/5 text-white" {...props}>
+      {children}
+    </thead>
+  ),
+  tbody: ({ children, node: _node, ...props }) => (
+    <tbody className="text-white/90" {...props}>
+      {children}
+    </tbody>
+  ),
+  th: ({ children, node: _node, ...props }) => (
+    <th className="border border-white/10 px-3 py-2 text-left font-semibold" {...props}>
+      {children}
+    </th>
+  ),
+  td: ({ children, node: _node, ...props }) => (
+    <td className="border border-white/10 px-3 py-2 align-top" {...props}>
+      {children}
+    </td>
+  ),
+};
+
 export default function ChatClient(props: {
   chatId: number;
   initialMessages: Msg[];
+  initialTitle: string;
 }) {
   const [messages, setMessages] = useState<Msg[]>(props.initialMessages ?? []);
   const [text, setText] = useState("");
   const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [busy, setBusy] = useState(false);
   const [lastSources, setLastSources] = useState<Source[] | null>(null);
+  const [title, setTitle] = useState(props.initialTitle || "New chat");
+  const [titleDraft, setTitleDraft] = useState(props.initialTitle || "New chat");
+  const [titleSaving, setTitleSaving] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const endRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const nextTitle = props.initialTitle || "New chat";
+    setTitle(nextTitle);
+    setTitleDraft(nextTitle);
+  }, [props.initialTitle]);
 
   const canSend = useMemo(() => text.trim().length > 0 && !busy, [text, busy]);
   const totals = useMemo(() => {
@@ -129,6 +259,47 @@ export default function ChatClient(props: {
     return { inputTokens, outputTokens, cost };
   }, [messages]);
   const currentModel = MODEL_BY_ID.get(model);
+
+  async function saveTitle() {
+    const trimmed = titleDraft.trim();
+    if (!trimmed) {
+      setTitleDraft(title);
+      setTitleError("Title cannot be empty.");
+      return;
+    }
+    if (trimmed === title || titleSaving) {
+      setTitleDraft(trimmed);
+      setTitleError(null);
+      return;
+    }
+
+    setTitleSaving(true);
+    setTitleError(null);
+
+    try {
+      const res = await fetch("/api/chat/session", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: props.chatId, title: trimmed }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json?.ok) {
+        const err = json?.error || "Update failed";
+        setTitleError(String(err));
+        return;
+      }
+
+      setTitle(trimmed);
+      setTitleDraft(trimmed);
+      router.refresh();
+    } catch (e) {
+      const err = e instanceof Error ? e.message : "Update failed";
+      setTitleError(err);
+    } finally {
+      setTitleSaving(false);
+    }
+  }
 
   async function send() {
     const msg = text.trim();
@@ -193,8 +364,38 @@ export default function ChatClient(props: {
   return (
     <div className="flex h-[70vh] flex-col">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
-        <div className="text-sm text-white/70">
-          Chat #{props.chatId}
+        <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
+          <span className="text-xs uppercase tracking-widest text-white/40">
+            Title
+          </span>
+          <input
+            value={titleDraft}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveTitle();
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setTitleDraft(title);
+                setTitleError(null);
+              }
+            }}
+            maxLength={120}
+            className="w-40 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white sm:w-60"
+          />
+          <button
+            type="button"
+            onClick={saveTitle}
+            disabled={
+              titleSaving || !titleDraft.trim() || titleDraft.trim() === title
+            }
+            className="ev-button px-3 py-2 text-xs"
+          >
+            {titleSaving ? "Saving..." : "Save"}
+          </button>
+          <span className="text-xs text-white/40">#{props.chatId}</span>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-white/70">
@@ -212,6 +413,9 @@ export default function ChatClient(props: {
           </select>
         </label>
       </div>
+      {titleError ? (
+        <div className="mt-2 text-xs text-rose-300">{titleError}</div>
+      ) : null}
 
       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-white/60">
         <span>Input tokens: {TOKEN_FORMATTER.format(totals.inputTokens)}</span>
@@ -241,9 +445,20 @@ export default function ChatClient(props: {
               <div className="text-xs font-semibold uppercase tracking-widest text-white/50">
                 {m.role}
               </div>
-              <div className="mt-2 whitespace-pre-wrap text-white/90">
-                {m.content}
-              </div>
+              {m.role === "assistant" ? (
+                <div className="mt-2 text-white/90">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={MARKDOWN_COMPONENTS}
+                  >
+                    {m.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="mt-2 whitespace-pre-wrap text-white/90">
+                  {m.content}
+                </div>
+              )}
 
               {m.role === "assistant" && m.metadata?.sources?.length ? (
                 <div className="mt-3 border-t border-white/10 pt-3">

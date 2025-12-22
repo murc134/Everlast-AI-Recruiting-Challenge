@@ -41,6 +41,8 @@ type ChatCompletionUsage = {
   total_tokens: number;
 };
 
+const DEFAULT_CHAT_TITLE = "New chat";
+
 function getCheapestModelId(models: PricingModel[], fallback: string) {
   let cheapest: PricingModel | undefined;
   let cheapestCost = Number.POSITIVE_INFINITY;
@@ -76,6 +78,13 @@ function pickModel(input: string | undefined) {
   return DEFAULT_MODEL;
 }
 
+function buildAutoTitle(message: string, maxLen = 64) {
+  const cleaned = message.replace(/\s+/g, " ").trim();
+  if (!cleaned) return DEFAULT_CHAT_TITLE;
+  if (cleaned.length <= maxLen) return cleaned;
+  return `${cleaned.slice(0, Math.max(0, maxLen - 3)).trimEnd()}...`;
+}
+
 async function callOpenAIChat(options: {
   apiKey: string;
   model: string;
@@ -94,7 +103,7 @@ async function callOpenAIChat(options: {
         { role: "system", content: options.system },
         { role: "user", content: options.user },
       ],
-      temperature: 0.2,
+      temperature: 1,
     }),
   });
 
@@ -155,10 +164,10 @@ export async function POST(request: Request) {
     // Sicherheitscheck: gehört dieser Chat dem User?
     const { data: chatRow, error: chatError } = await supabase
       .from("chat_sessions")
-      .select("id")
+      .select("id, title")
       .eq("id", chatId)
       .eq("owner_id", user.id)
-      .maybeSingle<{ id: number }>();
+      .maybeSingle<{ id: number; title: string }>();
 
     if (chatError) {
       return NextResponse.json({ ok: false, error: chatError.message }, { status: 500 });
@@ -197,6 +206,16 @@ export async function POST(request: Request) {
 
     if (msgInsertError) {
       return NextResponse.json({ ok: false, error: msgInsertError.message }, { status: 500 });
+    }
+
+    // Optional: auto-title the chat based on the first user message.
+    if (String(chatRow?.title || "").trim() === DEFAULT_CHAT_TITLE) {
+      const autoTitle = buildAutoTitle(message);
+      await supabase
+        .from("chat_sessions")
+        .update({ title: autoTitle })
+        .eq("id", chatId)
+        .eq("owner_id", user.id);
     }
 
     // 2) Embed query

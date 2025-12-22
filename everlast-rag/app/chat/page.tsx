@@ -45,6 +45,8 @@ export default async function ChatPage({
   const activeChatId =
     Number.isFinite(chatId ?? NaN) ? (chatId as number) : sessions?.[0]?.id ?? null;
 
+  const activeSession = sessions?.find((s) => s.id === activeChatId) ?? null;
+
   let messages: MessageRow[] = [];
   if (activeChatId) {
     const { data: msgs, error: msgsError } = await supabase
@@ -102,7 +104,11 @@ export default async function ChatPage({
 
         <section className="ev-surface p-4">
           {activeChatId ? (
-            <ChatClient chatId={activeChatId} initialMessages={messages} />
+            <ChatClient
+              chatId={activeChatId}
+              initialMessages={messages}
+              initialTitle={activeSession?.title ?? "New chat"}
+            />
           ) : (
             <div className="text-white/70">
               Erstelle zuerst einen Chat via "New chat".
