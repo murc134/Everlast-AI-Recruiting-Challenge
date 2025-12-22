@@ -5,7 +5,7 @@
   "models": [
     {
       "id": "gpt-5.2",
-      "label": "GPT-5.2",
+      "label": "gpt-5.2",
       "pricing": {
         "input_per_1m": 1.75,
         "cached_input_per_1m": 0.175,
@@ -13,8 +13,98 @@
       }
     },
     {
+      "id": "gpt-5.1",
+      "label": "gpt-5.1",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5",
+      "label": "gpt-5",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5-mini",
+      "label": "gpt-5-mini",
+      "pricing": {
+        "input_per_1m": 0.25,
+        "cached_input_per_1m": 0.025,
+        "output_per_1m": 2.0
+      }
+    },
+    {
+      "id": "gpt-5-nano",
+      "label": "gpt-5-nano",
+      "pricing": {
+        "input_per_1m": 0.05,
+        "cached_input_per_1m": 0.005,
+        "output_per_1m": 0.4
+      }
+    },
+    {
+      "id": "gpt-5.2-chat-latest",
+      "label": "gpt-5.2-chat-latest",
+      "pricing": {
+        "input_per_1m": 1.75,
+        "cached_input_per_1m": 0.175,
+        "output_per_1m": 14.0
+      }
+    },
+    {
+      "id": "gpt-5.1-chat-latest",
+      "label": "gpt-5.1-chat-latest",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5-chat-latest",
+      "label": "gpt-5-chat-latest",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5.1-codex-max",
+      "label": "gpt-5.1-codex-max",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5.1-codex",
+      "label": "gpt-5.1-codex",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-5-codex",
+      "label": "gpt-5-codex",
+      "pricing": {
+        "input_per_1m": 1.25,
+        "cached_input_per_1m": 0.125,
+        "output_per_1m": 10.0
+      }
+    },
+    {
       "id": "gpt-5.2-pro",
-      "label": "GPT-5.2 pro",
+      "label": "gpt-5.2-pro",
       "pricing": {
         "input_per_1m": 21.0,
         "cached_input_per_1m": null,
@@ -22,12 +112,183 @@
       }
     },
     {
-      "id": "gpt-5-mini",
-      "label": "GPT-5 mini",
+      "id": "gpt-5-pro",
+      "label": "gpt-5-pro",
       "pricing": {
-        "input_per_1m": 0.25,
+        "input_per_1m": 15.0,
+        "cached_input_per_1m": null,
+        "output_per_1m": 120.0
+      }
+    },
+    {
+      "id": "gpt-4.1",
+      "label": "gpt-4.1",
+      "pricing": {
+        "input_per_1m": 2.0,
+        "cached_input_per_1m": 0.5,
+        "output_per_1m": 8.0
+      }
+    },
+    {
+      "id": "gpt-4.1-mini",
+      "label": "gpt-4.1-mini",
+      "pricing": {
+        "input_per_1m": 0.4,
+        "cached_input_per_1m": 0.1,
+        "output_per_1m": 1.6
+      }
+    },
+    {
+      "id": "gpt-4.1-nano",
+      "label": "gpt-4.1-nano",
+      "pricing": {
+        "input_per_1m": 0.1,
         "cached_input_per_1m": 0.025,
-        "output_per_1m": 2.0
+        "output_per_1m": 0.4
+      }
+    },
+    {
+      "id": "gpt-4o",
+      "label": "gpt-4o",
+      "pricing": {
+        "input_per_1m": 2.5,
+        "cached_input_per_1m": 1.25,
+        "output_per_1m": 10.0
+      }
+    },
+    {
+      "id": "gpt-4o-2024-05-13",
+      "label": "gpt-4o-2024-05-13",
+      "pricing": {
+        "input_per_1m": 5.0,
+        "cached_input_per_1m": null,
+        "output_per_1m": 15.0
+      }
+    },
+    {
+      "id": "gpt-4o-mini",
+      "label": "gpt-4o-mini",
+      "pricing": {
+        "input_per_1m": 0.15,
+        "cached_input_per_1m": 0.075,
+        "output_per_1m": 0.6
+      }
+    },
+    {
+      "id": "gpt-realtime",
+      "label": "gpt-realtime",
+      "pricing": {
+        "input_per_1m": 4.0,
+        "cached_input_per_1m": 0.4,
+        "output_per_1m": 16.0
+      }
+    },
+    {
+      "id": "gpt-realtime-mini",
+      "label": "gpt-realtime-mini",
+      "pricing": {
+        "input_per_1m": 0.6,
+        "cached_input_per_1m": 0.06,
+        "output_per_1m": 2.4
+      }
+    },
+    {
+      "id": "gpt-4o-realtime-preview",
+      "label": "gpt-4o-realtime-preview",
+      "pricing": {
+        "input_per_1m": 5.0,
+        "cached_input_per_1m": 2.5,
+        "output_per_1m": 20.0
+      }
+    },
+    {
+      "id": "gpt-4o-mini-realtime-preview",
+      "label": "gpt-4o-mini-realtime-preview",
+      "pricing": {
+        "input_per_1m": 0.6,
+        "cached_input_per_1m": 0.3,
+        "output_per_1m": 2.4
+      }
+    },
+    {
+      "id": "o1",
+      "label": "o1",
+      "pricing": {
+        "input_per_1m": 15.0,
+        "cached_input_per_1m": 7.5,
+        "output_per_1m": 60.0
+      }
+    },
+    {
+      "id": "o1-pro",
+      "label": "o1-pro",
+      "pricing": {
+        "input_per_1m": 150.0,
+        "cached_input_per_1m": null,
+        "output_per_1m": 600.0
+      }
+    },
+    {
+      "id": "o3-pro",
+      "label": "o3-pro",
+      "pricing": {
+        "input_per_1m": 20.0,
+        "cached_input_per_1m": null,
+        "output_per_1m": 80.0
+      }
+    },
+    {
+      "id": "o3",
+      "label": "o3",
+      "pricing": {
+        "input_per_1m": 2.0,
+        "cached_input_per_1m": 0.5,
+        "output_per_1m": 8.0
+      }
+    },
+    {
+      "id": "o3-deep-research",
+      "label": "o3-deep-research",
+      "pricing": {
+        "input_per_1m": 10.0,
+        "cached_input_per_1m": 2.5,
+        "output_per_1m": 40.0
+      }
+    },
+    {
+      "id": "o4-mini",
+      "label": "o4-mini",
+      "pricing": {
+        "input_per_1m": 1.1,
+        "cached_input_per_1m": 0.275,
+        "output_per_1m": 4.4
+      }
+    },
+    {
+      "id": "o4-mini-deep-research",
+      "label": "o4-mini-deep-research",
+      "pricing": {
+        "input_per_1m": 2.0,
+        "cached_input_per_1m": 0.5,
+        "output_per_1m": 8.0
+      }
+    },
+    {
+      "id": "o3-mini",
+      "label": "o3-mini",
+      "pricing": {
+        "input_per_1m": 1.1,
+        "cached_input_per_1m": 0.55,
+        "output_per_1m": 4.4
+      }
+    },
+    {
+      "id": "o1-mini",
+      "label": "o1-mini",
+      "pricing": {
+        "input_per_1m": 1.1,
+        "cached_input_per_1m": 0.55,
+        "output_per_1m": 4.4
       }
     }
   ]
