@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
@@ -46,6 +52,11 @@ type Msg = {
   content: string;
   metadata?: MessageMetadata;
   created_at?: string;
+};
+
+type MarkdownCodeProps = ComponentPropsWithoutRef<"code"> & {
+  inline?: boolean;
+  node?: unknown;
 };
 
 function getCheapestModelId(models: PricingModel[], fallback: string) {
@@ -155,7 +166,7 @@ const MARKDOWN_COMPONENTS: Components = {
       {children}
     </pre>
   ),
-  code: ({ inline, className, children, node: _node, ...props }) => {
+  code: ({ inline, className, children, node: _node, ...props }: MarkdownCodeProps) => {
     if (inline) {
       return (
         <code
