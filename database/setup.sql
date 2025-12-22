@@ -73,6 +73,12 @@ create table if not exists public.profiles (
   -- In echter Prod: Vault/Secrets, nicht als Klartext in DB.
   openai_api_key text,
 
+  -- System Prompt fuer den Chat (wird um KONTEXT ergaenzt)
+  system_prompt text default $$Du bist ein RAG-Assistent.
+Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.
+Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.
+Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.$$,
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -82,6 +88,9 @@ comment on table public.profiles is
 
 comment on column public.profiles.openai_api_key is
 'Challenge-only: user-spezifischer OpenAI Key. In Prod: Secrets/Vault verwenden.';
+
+comment on column public.profiles.system_prompt is
+'System-Prompt fuer den Chat. Der KONTEXT-Block wird im Backend angehaengt.';
 
 -- updated_at automatisch pflegen (optional, aber sauber)
 create or replace function public.set_updated_at()

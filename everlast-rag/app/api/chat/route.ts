@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { embedTexts } from "@/lib/openai";
 import chatModels from "@/lib/chat-models.json";
 
-type ProfileRow = { openai_api_key: string | null };
+type ProfileRow = { openai_api_key: string | null; system_prompt: string | null };
 
 type ChatBody = {
   chat_id?: number;
@@ -44,6 +44,12 @@ type ChatCompletionUsage = {
 const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
 const DEFAULT_MODEL = MODEL_LIST[0]?.id ?? "gpt-5.2";
 const ALLOWED_MODELS = new Set(MODEL_LIST.map((m) => m.id));
+const DEFAULT_SYSTEM_PROMPT = [
+  "Du bist ein RAG-Assistent.",
+  "Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.",
+  "Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.",
+  "Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
+].join("\n");
 
 function pickModel(input: string | undefined) {
   const m = String(input || "").trim();
@@ -146,7 +152,7 @@ export async function POST(request: Request) {
     // OpenAI Key
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("openai_api_key")
+      .select("openai_api_key, system_prompt")
       .eq("id", user.id)
       .maybeSingle<ProfileRow>();
 
@@ -191,7 +197,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
     }
 
-    const safeChunks = (chunks ?? []).filter(Boolean);
+    if (chunks && !Array.isArray(chunks)) {
+      const errorMessage =
+        "Error" in chunks ? chunks.Error : "match_chunks returned an unexpected payload";
+      return NextResponse.json({ ok: false, error: errorMessage }, { status: 500 });
+    }
+
+    const safeChunks = (Array.isArray(chunks) ? chunks : []).filter(Boolean);
 
     // 4) Map document names for citations
     const docIds = Array.from(new Set(safeChunks.map((c) => c.document_id)));
@@ -226,7 +238,7 @@ export async function POST(request: Request) {
 
     const contextBlock =
       sources.length === 0
-        ? "KEIN KONTEXT VORHANDEN."
+        ? ""
         : sources
             .map(
               (s) =>
@@ -236,15 +248,13 @@ export async function POST(request: Request) {
             )
             .join("\n\n---\n\n");
 
-    const system = [
-      "Du bist ein RAG-Assistent.",
-      "Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.",
-      "Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.",
-      "Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
-      "",
-      "KONTEXT:",
-      contextBlock,
-    ].join("\n");
+    const storedPrompt = String(profile?.system_prompt ?? "").trim();
+    const basePrompt = storedPrompt || DEFAULT_SYSTEM_PROMPT;
+    const systemParts = [basePrompt];
+    if (contextBlock.trim()) {
+      systemParts.push("", "KONTEXT:", contextBlock);
+    }
+    const system = systemParts.join("\n");
 
     const { content: answer, usage } = await callOpenAIChat({
       apiKey,

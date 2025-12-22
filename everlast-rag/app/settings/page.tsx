@@ -1,6 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const DEFAULT_SYSTEM_PROMPT = [
+  "Du bist ein RAG-Assistent.",
+  "Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.",
+  "Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.",
+  "Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
+].join("\n");
+
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
@@ -11,7 +18,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("firstname, lastname, openai_api_key")
+    .select("firstname, lastname, openai_api_key, system_prompt")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -28,6 +35,8 @@ export default async function SettingsPage() {
     const firstname = String(formData.get("firstname") || "").trim() || null;
     const lastname = String(formData.get("lastname") || "").trim() || null;
     const openai_api_key = String(formData.get("openai_api_key") || "").trim() || null;
+    const systemPromptInput = String(formData.get("system_prompt") || "");
+    const system_prompt = systemPromptInput.trim() ? systemPromptInput : null;
 
     // Trigger hat die Row angelegt. Falls nicht: upsert als Fallback.
     const { error } = await supabaseServer.from("profiles").upsert(
@@ -36,6 +45,7 @@ export default async function SettingsPage() {
         firstname,
         lastname,
         openai_api_key,
+        system_prompt,
       },
       { onConflict: "id" }
     );
@@ -79,6 +89,19 @@ export default async function SettingsPage() {
             placeholder="sk-..."
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300/60"
           />
+        </label>
+
+        <label className="grid gap-2 text-sm text-white/80">
+          <span>System-Prompt</span>
+          <textarea
+            name="system_prompt"
+            rows={6}
+            defaultValue={profile?.system_prompt ?? DEFAULT_SYSTEM_PROMPT}
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-300/60"
+          />
+          <span className="text-xs text-white/50">
+            Der KONTEXT-Block wird automatisch angehaengt, wenn vorhanden.
+          </span>
         </label>
 
         <button
