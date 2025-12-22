@@ -157,15 +157,6 @@
       }
     },
     {
-      "id": "gpt-4o-2024-05-13",
-      "label": "gpt-4o-2024-05-13",
-      "pricing": {
-        "input_per_1m": 5.0,
-        "cached_input_per_1m": null,
-        "output_per_1m": 15.0
-      }
-    },
-    {
       "id": "gpt-4o-mini",
       "label": "gpt-4o-mini",
       "pricing": {
@@ -190,42 +181,6 @@
         "input_per_1m": 0.6,
         "cached_input_per_1m": 0.06,
         "output_per_1m": 2.4
-      }
-    },
-    {
-      "id": "gpt-4o-realtime-preview",
-      "label": "gpt-4o-realtime-preview",
-      "pricing": {
-        "input_per_1m": 5.0,
-        "cached_input_per_1m": 2.5,
-        "output_per_1m": 20.0
-      }
-    },
-    {
-      "id": "gpt-4o-mini-realtime-preview",
-      "label": "gpt-4o-mini-realtime-preview",
-      "pricing": {
-        "input_per_1m": 0.6,
-        "cached_input_per_1m": 0.3,
-        "output_per_1m": 2.4
-      }
-    },
-    {
-      "id": "o1",
-      "label": "o1",
-      "pricing": {
-        "input_per_1m": 15.0,
-        "cached_input_per_1m": 7.5,
-        "output_per_1m": 60.0
-      }
-    },
-    {
-      "id": "o1-pro",
-      "label": "o1-pro",
-      "pricing": {
-        "input_per_1m": 150.0,
-        "cached_input_per_1m": null,
-        "output_per_1m": 600.0
       }
     },
     {
