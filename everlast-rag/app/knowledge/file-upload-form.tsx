@@ -95,7 +95,7 @@ export default function FileUploadForm() {
 
       <button
         type="submit"
-        className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+        className="ev-button-accent w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isBusy}
       >
         Hochladen und indexieren

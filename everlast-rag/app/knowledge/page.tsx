@@ -65,20 +65,16 @@ export default async function KnowledgePage({
         <div className="flex gap-2">
           <a
             href="/knowledge?tab=text"
-            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              !isFile
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-900 hover:border-gray-900"
+            className={`px-3 py-2 text-sm font-semibold transition ${
+              !isFile ? "ev-button-accent" : "ev-button"
             }`}
           >
             Text
           </a>
           <a
             href="/knowledge?tab=file"
-            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              isFile
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-900 hover:border-gray-900"
+            className={`px-3 py-2 text-sm font-semibold transition ${
+              isFile ? "ev-button-accent" : "ev-button"
             }`}
           >
             Datei
@@ -110,7 +106,7 @@ export default async function KnowledgePage({
 
             <button
               type="submit"
-              className="rounded-lg border border-gray-900 px-3 py-2 font-semibold transition hover:bg-gray-900 hover:text-white"
+              className="ev-button-accent w-full sm:w-auto"
             >
               Speichern und indexieren
             </button>
@@ -138,7 +134,7 @@ export default async function KnowledgePage({
                   <input type="hidden" name="document_id" value={d.id} />
                   <button
                     type="submit"
-                    className="rounded-lg border border-gray-900 px-2 py-1 text-xs font-semibold transition hover:bg-gray-900 hover:text-white"
+                    className="ev-button px-2 py-1 text-xs"
                   >
                     Löschen
                   </button>
