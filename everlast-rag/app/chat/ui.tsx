@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import chatModels from "@/lib/chat-models.json";
 
 type Source = {
   n: number;
@@ -12,20 +13,61 @@ type Source = {
   snippet: string;
 };
 
+type PricingModel = {
+  id: string;
+  label: string;
+  pricing: {
+    input_per_1m: number;
+    cached_input_per_1m: number | null;
+    output_per_1m: number;
+  };
+};
+
+type Usage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+};
+
+type MessageMetadata = {
+  sources?: Source[];
+  model_used?: string;
+  model?: string;
+  usage?: Usage | null;
+};
+
 type Msg = {
   id?: number;
   role: "user" | "assistant";
   content: string;
-  metadata?: any;
+  metadata?: MessageMetadata;
   created_at?: string;
 };
 
-const MODELS = [
-  { id: "gpt-4.1-nano", label: "gpt-4.1-nano (billig)" },
-  { id: "gpt-4o-mini", label: "gpt-4o-mini (robuster)" },
-  { id: "gpt-4.1-mini", label: "gpt-4.1-mini" },
-  { id: "gpt-4o", label: "gpt-4o" },
-] as const;
+const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
+const DEFAULT_MODEL = MODEL_LIST[0]?.id ?? "gpt-5.2";
+const MODEL_BY_ID = new Map(MODEL_LIST.map((model) => [model.id, model]));
+
+const RATE_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 3,
+});
+const COST_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 6,
+});
+const TOKEN_FORMATTER = new Intl.NumberFormat("en-US");
+
+const MODEL_OPTIONS = MODEL_LIST.map((model) => ({
+  id: model.id,
+  label: `${model.label} (${RATE_FORMATTER.format(
+    model.pricing.input_per_1m
+  )} in / ${RATE_FORMATTER.format(model.pricing.output_per_1m)} out per 1M)`,
+}));
 
 export default function ChatClient(props: {
   chatId: number;
@@ -33,13 +75,42 @@ export default function ChatClient(props: {
 }) {
   const [messages, setMessages] = useState<Msg[]>(props.initialMessages ?? []);
   const [text, setText] = useState("");
-  const [model, setModel] = useState<(typeof MODELS)[number]["id"]>("gpt-4.1-nano");
+  const [model, setModel] = useState<string>(DEFAULT_MODEL);
   const [busy, setBusy] = useState(false);
   const [lastSources, setLastSources] = useState<Source[] | null>(null);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const canSend = useMemo(() => text.trim().length > 0 && !busy, [text, busy]);
+  const totals = useMemo(() => {
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let cost = 0;
+
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+      const usage = message.metadata?.usage;
+      const promptTokens = Number(usage?.prompt_tokens ?? 0);
+      const completionTokens = Number(usage?.completion_tokens ?? 0);
+
+      if (promptTokens || completionTokens) {
+        inputTokens += promptTokens;
+        outputTokens += completionTokens;
+
+        const modelId = String(
+          message.metadata?.model_used || message.metadata?.model || ""
+        );
+        const pricing = MODEL_BY_ID.get(modelId);
+        if (pricing) {
+          cost += (promptTokens / 1_000_000) * pricing.pricing.input_per_1m;
+          cost += (completionTokens / 1_000_000) * pricing.pricing.output_per_1m;
+        }
+      }
+    }
+
+    return { inputTokens, outputTokens, cost };
+  }, [messages]);
+  const currentModel = MODEL_BY_ID.get(model);
 
   async function send() {
     const msg = text.trim();
@@ -80,7 +151,11 @@ export default function ChatClient(props: {
         {
           role: "assistant",
           content: json.answer,
-          metadata: { sources: json.sources, model: json.model },
+          metadata: {
+            sources: json.sources,
+            model_used: json.model,
+            usage: json.usage,
+          },
         },
       ]);
 
@@ -108,16 +183,29 @@ export default function ChatClient(props: {
           <span>Model</span>
           <select
             value={model}
-            onChange={(e) => setModel(e.target.value as any)}
+            onChange={(e) => setModel(e.target.value)}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white"
           >
-            {MODELS.map((m) => (
+            {MODEL_OPTIONS.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label}
               </option>
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-white/60">
+        <span>Input tokens: {TOKEN_FORMATTER.format(totals.inputTokens)}</span>
+        <span>Output tokens: {TOKEN_FORMATTER.format(totals.outputTokens)}</span>
+        <span>Cost: {COST_FORMATTER.format(totals.cost)}</span>
+        {currentModel ? (
+          <span>
+            Model pricing: {RATE_FORMATTER.format(currentModel.pricing.input_per_1m)}{" "}
+            in / {RATE_FORMATTER.format(currentModel.pricing.output_per_1m)} out
+            per 1M
+          </span>
+        ) : null}
       </div>
 
       <div className="mt-4 flex-1 overflow-auto pr-2">

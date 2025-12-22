@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { embedTexts } from "@/lib/openai";
+import chatModels from "@/lib/chat-models.json";
 
 type ProfileRow = { openai_api_key: string | null };
 
@@ -24,18 +25,31 @@ type DocumentRow = {
   document_name: string;
 };
 
-const ALLOWED_MODELS = [
-  "gpt-4.1-nano",
-  "gpt-4o-mini",
-  "gpt-4.1-mini",
-  "gpt-4o",
-] as const;
+type PricingModel = {
+  id: string;
+  label: string;
+  pricing: {
+    input_per_1m: number;
+    cached_input_per_1m: number | null;
+    output_per_1m: number;
+  };
+};
+
+type ChatCompletionUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+};
+
+const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
+const DEFAULT_MODEL = MODEL_LIST[0]?.id ?? "gpt-5.2";
+const ALLOWED_MODELS = new Set(MODEL_LIST.map((m) => m.id));
 
 function pickModel(input: string | undefined) {
   const m = String(input || "").trim();
-  if (!m) return "gpt-4.1-nano";
-  if ((ALLOWED_MODELS as readonly string[]).includes(m)) return m;
-  return "gpt-4.1-nano";
+  if (!m) return DEFAULT_MODEL;
+  if (ALLOWED_MODELS.has(m)) return m;
+  return DEFAULT_MODEL;
 }
 
 async function callOpenAIChat(options: {
@@ -71,7 +85,15 @@ async function callOpenAIChat(options: {
     json?.choices?.[0]?.message?.content?.[0]?.text ??
     "";
 
-  return String(content || "").trim();
+  const usage: ChatCompletionUsage | null = json?.usage
+    ? {
+        prompt_tokens: Number(json.usage.prompt_tokens ?? 0),
+        completion_tokens: Number(json.usage.completion_tokens ?? 0),
+        total_tokens: Number(json.usage.total_tokens ?? 0),
+      }
+    : null;
+
+  return { content: String(content || "").trim(), usage };
 }
 
 export async function POST(request: Request) {
@@ -224,7 +246,7 @@ export async function POST(request: Request) {
       contextBlock,
     ].join("\n");
 
-    const answer = await callOpenAIChat({
+    const { content: answer, usage } = await callOpenAIChat({
       apiKey,
       model,
       system,
@@ -235,6 +257,7 @@ export async function POST(request: Request) {
     const assistantMetadata = {
       model_used: model,
       top_k: topK,
+      usage,
       sources: sources.map((s) => ({
         n: s.n,
         document_id: s.document_id,
@@ -270,6 +293,7 @@ export async function POST(request: Request) {
       model: model,
       answer: answer || "Nicht in der Wissensbasis.",
       sources: assistantMetadata.sources,
+      usage,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
