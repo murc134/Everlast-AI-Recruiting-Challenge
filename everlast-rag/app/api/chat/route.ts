@@ -41,8 +41,26 @@ type ChatCompletionUsage = {
   total_tokens: number;
 };
 
+function getCheapestModelId(models: PricingModel[], fallback: string) {
+  let cheapest: PricingModel | undefined;
+  let cheapestCost = Number.POSITIVE_INFINITY;
+
+  for (const model of models) {
+    const pricing = model?.pricing;
+    if (!pricing) continue;
+    const cost = Number(pricing.input_per_1m) + Number(pricing.output_per_1m);
+    if (!Number.isFinite(cost)) continue;
+    if (cost < cheapestCost) {
+      cheapestCost = cost;
+      cheapest = model;
+    }
+  }
+
+  return cheapest?.id ?? fallback;
+}
+
 const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
-const DEFAULT_MODEL = MODEL_LIST[0]?.id ?? "gpt-5.2";
+const DEFAULT_MODEL = getCheapestModelId(MODEL_LIST, "gpt-5.2");
 const ALLOWED_MODELS = new Set(MODEL_LIST.map((m) => m.id));
 const DEFAULT_SYSTEM_PROMPT = [
   "Du bist ein RAG-Assistent.",
