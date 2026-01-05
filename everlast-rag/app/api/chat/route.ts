@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { embedTexts } from "@/lib/openai";
+import { embedTexts, resolveOpenAiKey } from "@/lib/openai";
 import chatModels from "@/lib/chat-models.json";
 
 type ProfileRow = { openai_api_key: string | null; system_prompt: string | null };
@@ -66,9 +66,10 @@ const DEFAULT_MODEL = getCheapestModelId(MODEL_LIST, "gpt-5.2");
 const ALLOWED_MODELS = new Set(MODEL_LIST.map((m) => m.id));
 const DEFAULT_SYSTEM_PROMPT = [
   "Du bist ein RAG-Assistent.",
-  "Nutze ausschliesslich den bereitgestellten KONTEXT um zu antworten.",
+  "Wenn KONTEXT bereitgestellt ist, nutze ausschliesslich den KONTEXT um zu antworten.",
+  "Wenn KONTEXT nicht vorhanden ist, beantworte die Frage normal.",
   "Wenn der Kontext nicht ausreicht, sage klar: 'Nicht in der Wissensbasis'.",
-  "Gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
+  "Wenn du KONTEXT nutzt, gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
 ].join("\n");
 
 function pickModel(input: string | undefined) {
@@ -187,10 +188,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: profileError.message }, { status: 500 });
     }
 
-    const apiKey = (profile?.openai_api_key ?? "").trim();
+    const apiKey = resolveOpenAiKey(profile?.openai_api_key);
     if (!apiKey) {
       return NextResponse.json(
-        { ok: false, error: "Missing OpenAI API key. Set it in /settings." },
+        { ok: false, error: "Missing OpenAI API key. Set it in /settings or via CHATGPT_API_KEY." },
         { status: 400 }
       );
     }

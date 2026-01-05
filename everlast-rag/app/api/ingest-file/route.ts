@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { chunkText } from "@/lib/chunking";
-import { embedTexts } from "@/lib/openai";
+import { embedTexts, resolveOpenAiKey } from "@/lib/openai";
 import { toErrorMessage } from "@/lib/errors";
 import pdfParse from "pdf-parse";
 
@@ -93,11 +93,11 @@ export async function POST(request: Request) {
       return errorResponse("profile_lookup", profileError, 500);
     }
 
-    const apiKey = (profile?.openai_api_key ?? "").trim();
+    const apiKey = resolveOpenAiKey(profile?.openai_api_key);
     if (!apiKey) {
       return errorResponse(
         "profile_lookup",
-        "Missing OpenAI API key. Set it in /settings.",
+        "Missing OpenAI API key. Set it in /settings or via CHATGPT_API_KEY.",
         400
       );
     }

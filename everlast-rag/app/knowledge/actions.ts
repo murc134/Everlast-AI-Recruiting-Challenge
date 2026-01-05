@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { chunkText } from "@/lib/chunking";
-import { embedTexts } from "@/lib/openai";
+import { embedTexts, resolveOpenAiKey } from "@/lib/openai";
 import { isNextNavigationError, toErrorMessage } from "@/lib/errors";
 
 type ProfileRow = { openai_api_key: string | null };
@@ -39,7 +39,7 @@ export async function ingestKnowledge(formData: FormData) {
       redirect(`/knowledge?error=${encodeURIComponent(profileError.message)}`);
     }
 
-    const apiKey = (profile?.openai_api_key ?? "").trim();
+    const apiKey = resolveOpenAiKey(profile?.openai_api_key);
     if (!apiKey) redirect("/knowledge?error=missing_openai_key");
 
     // 1) documents insert (Textarea = paste)

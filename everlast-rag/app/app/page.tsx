@@ -55,7 +55,12 @@ export default async function AppHome() {
       </p>
 
       {hasOpenAiKey ? (
-        <p className="mt-2 text-sm text-white/60">Deine App ist konfiguriert.</p>
+        <p className="mt-2 text-sm text-white/60">Du hast deinen eigenen Open AI API Key in den <Link
+              href="/settings"
+              className="text-[color:var(--ev-brand)] underline underline-offset-4"
+            >
+              Einstellungen
+            </Link> hinterlegt.</p>
       ) : (
         <div className="mt-4 ev-card ev-surface p-5">
           <p className="font-semibold text-white">

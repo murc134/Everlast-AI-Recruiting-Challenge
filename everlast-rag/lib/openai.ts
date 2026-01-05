@@ -2,6 +2,16 @@ export type OpenAIEmbedResponse = {
   data: Array<{ embedding: number[] }>;
 };
 
+export function resolveOpenAiKey(userKey?: string | null) {
+  const trimmedUserKey = String(userKey ?? "").trim();
+  if (trimmedUserKey) return trimmedUserKey;
+
+  const envKey = String(process.env.CHATGPT_API_KEY ?? "").trim();
+  if (envKey) return envKey;
+
+  return null;
+}
+
 export async function embedTexts(options: {
   apiKey: string;
   model?: string; // default: text-embedding-3-small

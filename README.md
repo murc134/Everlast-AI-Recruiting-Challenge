@@ -91,7 +91,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...   # optional (aktuell nicht genutzt)
-OPENAI_API_KEY=...              # nicht verwendet, da User-Key in /settings
+  CHATGPT_API_KEY=...            # Fallback, wenn in /settings kein User-Key gesetzt ist
 ```
 Hinweis: Es werden die Legacy anon/service_role Keys verwendet, um das Setup schlank zu halten.
 
@@ -132,4 +132,3 @@ Kernauswahl aus `database/setup.sql`:
 - Chat-Historie wird persistent gespeichert (Sessions + Messages), inkl. Quellen-Metadata.
 - PDF-Parsing erfolgt serverseitig (pdf-parse) mit Groessenlimit, um Failure Cases klein zu halten.
 - UI zeigt Tokenverbrauch und Kosten, berechnet aus `chat-models.json`.
-
