@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { newChat } from "./actions";
 import ChatClient from "./ui";
+import SessionList from "./session-list";
 
 type ChatSessionRow = {
   id: number;
@@ -89,31 +90,7 @@ export default async function ChatPage({
       <div className="mt-6 grid gap-4 md:grid-cols-[280px_1fr]">
         <aside className="ev-surface p-4">
           <div className="ev-pill">Sessions</div>
-
-          <div className="mt-4 grid gap-2">
-            {sessions && sessions.length > 0 ? (
-              sessions.map((s) => {
-                const active = s.id === activeChatId;
-                return (
-                  <a
-                    key={s.id}
-                    href={`/chat?id=${s.id}`}
-                    className={[
-                      "rounded-xl border px-3 py-2 text-sm transition",
-                      active
-                        ? "border-white/20 bg-white/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10",
-                    ].join(" ")}
-                  >
-                    <div className="font-semibold text-white">{s.title}</div>
-                    <div className="mt-1 text-xs text-white/50">#{s.id}</div>
-                  </a>
-                );
-              })
-            ) : (
-              <p className="text-sm text-white/60">Noch keine Sessions.</p>
-            )}
-          </div>
+          <SessionList sessions={sessions ?? []} activeChatId={activeChatId} />
         </aside>
 
         <section className="ev-surface p-4">
