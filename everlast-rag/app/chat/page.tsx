@@ -17,6 +17,10 @@ type MessageRow = {
   metadata: any;
 };
 
+type ProfileRow = {
+  openai_api_key: string | null;
+};
+
 export default async function ChatPage({
   searchParams,
 }: {
@@ -28,6 +32,16 @@ export default async function ChatPage({
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("openai_api_key")
+    .eq("id", user.id)
+    .maybeSingle<ProfileRow>();
+
+  if (profileError) throw new Error(profileError.message);
+
+  const hasUserOpenAiKey = Boolean((profile?.openai_api_key ?? "").trim().length > 0);
 
   const sp = await searchParams;
   const chatIdParam = typeof sp.id === "string" ? sp.id : null;
@@ -108,6 +122,7 @@ export default async function ChatPage({
               chatId={activeChatId}
               initialMessages={messages}
               initialTitle={activeSession?.title ?? "New chat"}
+              canUseAllModels={hasUserOpenAiKey}
             />
           ) : (
             <div className="text-white/70">

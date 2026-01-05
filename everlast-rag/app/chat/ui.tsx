@@ -80,6 +80,10 @@ function getCheapestModelId(models: PricingModel[], fallback: string) {
 const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
 const DEFAULT_MODEL = getCheapestModelId(MODEL_LIST, "gpt-5.2");
 const MODEL_BY_ID = new Map(MODEL_LIST.map((model) => [model.id, model]));
+const FALLBACK_MODEL_ID = "gpt-5-nano";
+const FALLBACK_MODEL = MODEL_BY_ID.has(FALLBACK_MODEL_ID)
+  ? FALLBACK_MODEL_ID
+  : DEFAULT_MODEL;
 
 const RATE_FORMATTER = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -94,13 +98,6 @@ const COST_FORMATTER = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 6,
 });
 const TOKEN_FORMATTER = new Intl.NumberFormat("en-US");
-
-const MODEL_OPTIONS = MODEL_LIST.map((model) => ({
-  id: model.id,
-  label: `${model.label} (${RATE_FORMATTER.format(
-    model.pricing.input_per_1m
-  )} in / ${RATE_FORMATTER.format(model.pricing.output_per_1m)} out per 1M)`,
-}));
 
 const MARKDOWN_COMPONENTS: Components = {
   h1: ({ children, node: _node, ...props }) => (
@@ -220,10 +217,13 @@ export default function ChatClient(props: {
   chatId: number;
   initialMessages: Msg[];
   initialTitle: string;
+  canUseAllModels: boolean;
 }) {
   const [messages, setMessages] = useState<Msg[]>(props.initialMessages ?? []);
   const [text, setText] = useState("");
-  const [model, setModel] = useState<string>(DEFAULT_MODEL);
+  const [model, setModel] = useState<string>(() =>
+    props.canUseAllModels ? DEFAULT_MODEL : FALLBACK_MODEL
+  );
   const [busy, setBusy] = useState(false);
   const [lastSources, setLastSources] = useState<Source[] | null>(null);
   const [title, setTitle] = useState(props.initialTitle || "New chat");
@@ -239,6 +239,32 @@ export default function ChatClient(props: {
     setTitle(nextTitle);
     setTitleDraft(nextTitle);
   }, [props.initialTitle]);
+
+  const availableModels = useMemo(() => {
+    if (props.canUseAllModels) return MODEL_LIST;
+    return MODEL_LIST.filter((m) => m.id === FALLBACK_MODEL);
+  }, [props.canUseAllModels]);
+
+  const availableModelIds = useMemo(
+    () => new Set(availableModels.map((m) => m.id)),
+    [availableModels]
+  );
+
+  useEffect(() => {
+    if (availableModelIds.has(model)) return;
+    setModel(props.canUseAllModels ? DEFAULT_MODEL : FALLBACK_MODEL);
+  }, [availableModelIds, model, props.canUseAllModels]);
+
+  const modelOptions = useMemo(
+    () =>
+      availableModels.map((m) => ({
+        id: m.id,
+        label: `${m.label} (${RATE_FORMATTER.format(
+          m.pricing.input_per_1m
+        )} in / ${RATE_FORMATTER.format(m.pricing.output_per_1m)} out per 1M)`,
+      })),
+    [availableModels]
+  );
 
   const canSend = useMemo(() => text.trim().length > 0 && !busy, [text, busy]);
   const totals = useMemo(() => {
@@ -416,7 +442,7 @@ export default function ChatClient(props: {
             onChange={(e) => setModel(e.target.value)}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white"
           >
-            {MODEL_OPTIONS.map((m) => (
+            {modelOptions.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label}
               </option>

@@ -64,6 +64,10 @@ function getCheapestModelId(models: PricingModel[], fallback: string) {
 const MODEL_LIST = (chatModels.models as PricingModel[]).filter((m) => m?.id);
 const DEFAULT_MODEL = getCheapestModelId(MODEL_LIST, "gpt-5.2");
 const ALLOWED_MODELS = new Set(MODEL_LIST.map((m) => m.id));
+const FALLBACK_MODEL_ID = "gpt-5-nano";
+const FALLBACK_MODEL = ALLOWED_MODELS.has(FALLBACK_MODEL_ID)
+  ? FALLBACK_MODEL_ID
+  : DEFAULT_MODEL;
 const DEFAULT_SYSTEM_PROMPT = [
   "Du bist ein RAG-Assistent.",
   "Wenn KONTEXT bereitgestellt ist, nutze ausschliesslich den KONTEXT um zu antworten.",
@@ -72,11 +76,11 @@ const DEFAULT_SYSTEM_PROMPT = [
   "Wenn du KONTEXT nutzt, gib am Ende eine Quellenliste im Format [1], [2], ... passend zu den verwendeten Textstellen.",
 ].join("\n");
 
-function pickModel(input: string | undefined) {
+function pickModel(input: string | undefined, allowed: Set<string>) {
   const m = String(input || "").trim();
-  if (!m) return DEFAULT_MODEL;
-  if (ALLOWED_MODELS.has(m)) return m;
-  return DEFAULT_MODEL;
+  if (!m) return allowed.has(DEFAULT_MODEL) ? DEFAULT_MODEL : FALLBACK_MODEL;
+  if (allowed.has(m)) return m;
+  return allowed.has(DEFAULT_MODEL) ? DEFAULT_MODEL : FALLBACK_MODEL;
 }
 
 function buildAutoTitle(message: string, maxLen = 64) {
@@ -153,7 +157,6 @@ export async function POST(request: Request) {
     const chatId = Number(body.chat_id);
     const message = String(body.message || "").trim();
     const topK = Math.max(1, Math.min(10, Number(body.top_k ?? 6)));
-    const model = pickModel(body.model);
 
     if (!Number.isFinite(chatId)) {
       return NextResponse.json({ ok: false, error: "chat_id is required" }, { status: 400 });
@@ -188,13 +191,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: profileError.message }, { status: 500 });
     }
 
-    const apiKey = resolveOpenAiKey(profile?.openai_api_key);
+    const userKey = (profile?.openai_api_key ?? "").trim();
+    const apiKey = resolveOpenAiKey(userKey);
     if (!apiKey) {
       return NextResponse.json(
         { ok: false, error: "Missing OpenAI API key. Set it in /settings or via CHATGPT_API_KEY." },
         { status: 400 }
       );
     }
+    const allowedModels = userKey ? ALLOWED_MODELS : new Set([FALLBACK_MODEL]);
+    const model = pickModel(body.model, allowedModels);
 
     // 1) Persist user message
     const { error: msgInsertError } = await supabase.from("messages").insert({
